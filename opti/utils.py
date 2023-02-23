@@ -14,6 +14,51 @@ np.random.seed(0)
 
 
 
+def get_data(domain_train, domain_phy, k, alpha, f_0, n_samples):
+    """Generate training and physical data.
+
+    Parameters
+    ----------
+    domain_train : tuple
+        Minimum and maximum value of the training domain.
+    domain_phy : tuple
+        Minimum and maximum value of the physical domain.
+    k : float
+        Limit capacity of the medium.
+    alpha : float
+        Constant of the function.
+    f_0 : float
+        Initial term `$f(t=0) = f_0$`.
+    n_samples : int
+        Number of samples to generate.
+
+    Returns
+    -------
+    t_train : ndarray
+        Training time data.
+    f_train : ndarray
+        Training Gompertz data.
+    t_phy : ndarray
+        Physical time data.
+    f_phy : ndarray
+        Physical Gompertz data.
+    """
+    t_train = np.sort(
+        (domain_train[1] - domain_train[0]) * \
+            np.random.random_sample(n_samples) + domain_train[0],
+        axis=0
+    )
+    t_phy = np.linspace(domain_phy[0], domain_phy[1], num=1000)
+
+    f_analytical = Gompertz(k=k, f_0=f_0, alpha=alpha)
+
+    f_train = f_analytical(t_train)
+    f_train += np.random.normal(scale=k * 0.05, size=n_samples)
+    f_phy = f_analytical(t_phy)
+
+    return t_train, f_train, t_phy, f_phy
+
+
 class Gompertz:
     """Create a configured Gompertz function.
 
@@ -58,11 +103,12 @@ class HistoryManager:
         self.k = np.zeros((n_epochs,))
         self.alpha = np.zeros((n_epochs,))
         self.epoch = 0
+        self.saving_step = n_epochs//10 if n_epochs > 100 else 1
         # Gompertz
         self.t_phy = t_phy
         self.f_0 = f_0
-        self.gompertz = np.zeros((n_epochs//100, t_phy.shape[0]))
-        self.prediction = np.zeros((n_epochs//100, t_phy.shape[0]))
+        self.gompertz = np.zeros((n_epochs//self.saving_step, t_phy.shape[0]))
+        self.prediction = np.zeros((n_epochs//self.saving_step, t_phy.shape[0]))
 
     def update(self, loss, loss_data, loss_phy, k, alpha, f_phy_pred):
         self.loss[self.epoch] = loss
@@ -70,7 +116,7 @@ class HistoryManager:
         self.loss_phy[self.epoch] = loss_phy
         self.k[self.epoch] = k
         self.alpha[self.epoch] = alpha
-        if self.epoch % 100:
+        if self.epoch % self.saving_step == 0:
             self.update_gompertz()
             self.update_predictions(f_phy_pred)
         self.epoch += 1
@@ -80,11 +126,11 @@ class HistoryManager:
         f_nn = Gompertz(
             k=self.k[self.epoch], alpha=self.alpha[self.epoch], f_0=self.f_0
         )
-        self.gompertz[self.epoch//100] = f_nn(self.t_phy)
+        self.gompertz[self.epoch//self.saving_step] = f_nn(self.t_phy)
 
     def update_predictions(self, f_phy_pred):
         # Gompertz
-        self.prediction[self.epoch//100] = f_phy_pred
+        self.prediction[self.epoch//self.saving_step] = f_phy_pred
 
     def plot_learning_iterations(self):
         fig, axs = plt.subplots(2, 3, sharex=True, figsize=(3*6.4, 1.5*4.8))
@@ -111,13 +157,14 @@ class HistoryManager:
         fig.tight_layout()
         plt.show()
 
-    def plot_dynamic_evolution(self, f_phy, t_train, f_train):
+    def plot_dynamic_evolution(self, t_train, f_train, f_phy):
         fig, axs = plt.subplots(1, 2, figsize=(2*6.4, 1*4.8))
 
         def animate(i):
-            fig.suptitle(
-                f'Iterration: {i*100} - Loss: {self.loss[i]:.1E}', fontsize=16
-            )
+            fig.suptitle((
+                f"Iterration: {i*self.saving_step} - "
+                f"Loss: {self.loss[i]:.1E}"
+            ), fontsize=16)
             for j in range(2):
                 axs[j].cla()
             axs[0].plot(self.t_phy, self.gompertz[i], label="Computed")
@@ -125,7 +172,8 @@ class HistoryManager:
             for j in range(2):
                 axs[j].plot(self.t_phy, f_phy, label="True solution")
                 axs[j].scatter(
-                    t_train, f_train, label="Training data", color="red"
+                    t_train[:i+1], f_train[:i+1],
+                    label="Training data", color="red"
                 )
                 axs[j].set_xlim(self.t_phy[0], self.t_phy[-1])
                 axs[j].set_ylim(-np.max(f_phy) * 0.1, np.max(f_phy) * 1.1)
@@ -144,7 +192,7 @@ class HistoryManager:
                             k_true, alpha_true, k, alpha):
         f_nn = Gompertz(k=k, alpha=alpha, f_0=self.f_0)
 
-        title = f"\alpha: {alpha:.3f}/{alpha_true:.3f} - K: {k:.2f}/{k_true:.2f}"
+        title = f"{{\alpha}}: {alpha:.3f}/{alpha_true:.3f} - K: {k:.2f}/{k_true:.2f}"
 
         fig, axs = plt.subplots(1, 1, sharex=True, figsize=(6.4, 4.8))
         fig.suptitle(title, fontsize=16)
