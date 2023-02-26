@@ -1,10 +1,12 @@
 """Module that contains all utility functions."""
 
+import os
 import random
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.animation
+from matplotlib.animation import FuncAnimation
+from matplotlib.animation import PillowWriter
 plt.rcParams["animation.html"] = "jshtml"
 
 
@@ -172,6 +174,7 @@ class HistoryManager:
             axs[i, j].grid("major")
         axs[1, 0].set_visible(False)
         fig.tight_layout()
+        plt.savefig(os.path.join("static", "iterations.png"))
         plt.show()
 
     def plot_dynamic_evolution(self, t_train, f_train, f_phy):
@@ -197,9 +200,14 @@ class HistoryManager:
             axs.set_ylabel("f(t)")
             axs.set_title("$Gompertz_{PiNN}$")
 
-        ani = matplotlib.animation.FuncAnimation(
+        ani = FuncAnimation(
             fig, animate, frames=self.gompertz.shape[0], repeat_delay=5
         )
+        # To save the animation using Pillow as a gif
+        writer = PillowWriter(
+            fps=15, metadata=dict(artist='Me'), bitrate=1800
+        )
+        ani.save(os.path.join("static", ".gif"), writer=writer)
         plt.show()
 
     def plot_best_iteration(self, t_train, f_train, f_phy,
@@ -281,6 +289,7 @@ class MultiHistoryManager(HistoryManager):
                 axs[i, j].set_yscale("log")
                 axs[i, j].grid("major")
         fig.tight_layout()
+        plt.savefig(os.path.join("static", "iterations.png"))
         plt.show()
 
     def plot_dynamic_evolution(self, t_train, f_train, f_phy):
@@ -305,7 +314,12 @@ class MultiHistoryManager(HistoryManager):
             axs[0].plot(self.t_phy, self.gompertz[i], label="Computed")
             axs[1].plot(self.t_phy, self.gompertz_sec[i], label="Computed")
 
-        ani = matplotlib.animation.FuncAnimation(
+        ani = FuncAnimation(
             fig, animate, frames=self.gompertz.shape[0], repeat_delay=5
         )
+        # To save the animation using Pillow as a gif
+        writer = PillowWriter(
+            fps=2, metadata=dict(artist='Me'), bitrate=1800
+        )
+        ani.save(os.path.join("static", "gompertz_model.gif"), writer=writer)
         plt.show()
