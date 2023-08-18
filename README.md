@@ -40,7 +40,7 @@ Finaly the loss is:
 
 $$𝓛 = 𝓛_{sim} + 𝓛_{DE}$$
 
-Then, the selection of $(K_{sim}, \alpha_{sim}, shif_{sim})$ is done using [Bayesian optimization](http://hyperopt.github.io/hyperopt/).
+Then, the selection of $(K_{sim}, \alpha_{sim}, shift_{sim})$ is done using [Bayesian optimization](http://hyperopt.github.io/hyperopt/).
 
 
 
