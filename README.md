@@ -30,11 +30,11 @@ $$\frac{\mathrm{d} f_{sim}}{\mathrm{d} t} \left ( t \right ) - \alpha_{sim} f_{s
 
 which leads to the following error:
 
-$$𝓛_{DE} = \frac{1}{M} \sum^{M}_{i=1} \left ( \frac{\mathrm{d} f_{sim}}{\mathrm{d} t} \bigg|_{t_i} - \alpha_{sim} f_{sim}(t_i) \ \mathrm{ln} \left ( \frac{K_{sim}}{f_{sim}(t_i)} \right ) \right ) ^ 2$$
+$$𝓛_{DE} = \frac{1}{M} \sum_{i=1}^{M} \left ( \frac{\mathrm{d} f_{sim}}{\mathrm{d} t} (t_i) - \alpha_{sim} f_{sim}(t_i) \ \mathrm{ln} \left ( \frac{K_{sim}}{f_{sim}(t_i)} \right ) \right ) ^ 2$$
 
 And the classic error of the data, MSE of between the simulated data and the training ones:
 
-$$𝓛_{sim} = \frac{1}{M} \sum^{M}_{i=1} \left ( f_i - f_{sim}(t_i) \right ) ^ 2$$
+$$𝓛_{sim} = \frac{1}{M} \sum_{i=1}^{M} \left ( f_i - f_{sim} (t_i) \right ) ^ 2$$
 
 Finaly the loss is:
 
